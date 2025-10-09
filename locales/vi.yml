@@ -70,6 +70,13 @@ tools:
     measurement: Đo lường
     text: Văn bản
     data: Dữ liệu
+    devops: Devops
+
+  check-env:
+    title: Kiểm Tra Biến Môi Trường
+    description: Quản lý và so sánh các biến môi trường giữa các môi trường khác nhau (Dev, Staging, Production) cho nhiều services.
+    
+    loadSample: Tải Dữ Liệu Mẫu
 
   password-strength-analyser:
     title: Bộ phân tích độ mạnh mật khẩu

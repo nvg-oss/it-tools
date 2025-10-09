@@ -70,6 +70,13 @@ tools:
     measurement: Measurement
     text: Text
     data: Data
+    devops: Devops
+
+  check-env:
+    title: Check Environment Variables
+    description: Manage and compare environment variables across different environments (Dev, Staging, Production) for multiple services.
+    
+    loadSample: Load Sample Data
 
   password-strength-analyser:
     title: Password strength analyser

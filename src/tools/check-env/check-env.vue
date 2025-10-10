@@ -344,12 +344,6 @@ const stats = computed(() => {
   return { total, filled, missing };
 });
 
-// Check if environments match
-const checkMismatch = (variable: EnvVariable) => {
-  const values = [variable.dev, variable.staging, variable.production].filter(Boolean);
-  return new Set(values).size > 1;
-};
-
 // Auto-load data from API on mount
 onMounted(() => {
   loadFromAPI();
@@ -483,56 +477,41 @@ onMounted(() => {
           <table class="env-table">
             <thead>
               <tr>
-                <th style="width: 25%">Key</th>
-                <th style="width: 23%">Dev Env</th>
-                <th style="width: 23%">Staging Env</th>
-                <th style="width: 23%">Pro Env</th>
+                <th style="width: 40%">Key</th>
+                <th style="width: 20%" text-center>Dev Env</th>
+                <th style="width: 20%" text-center>Staging Env</th>
+                <th style="width: 20%" text-center>Pro Env</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="activeService?.variables.length === 0">
-                <td colspan="5" text-center op-50 py-8>
-                  No variables yet. Click "Add Variable" to get started.
+                <td colspan="4" text-center op-50 py-8>
+                  No variables found in this service.
                 </td>
               </tr>
               <tr
                 v-for="(variable, index) in activeService?.variables"
                 :key="index"
-                :class="{ 'has-mismatch': checkMismatch(variable) }"
               >
                 <td>
-                  <n-input
-                    v-model:value="variable.key"
-                    placeholder="KEY"
-                    size="small"
-                  />
+                  <span font-mono font-semibold text-sm>
+                    {{ variable.key }}
+                  </span>
                 </td>
-                <td :class="{ 'env-exists': variable.dev !== null }">
-                  <n-input
-                    v-if="variable.dev !== null"
-                    v-model:value="variable.dev"
-                    placeholder="dev value"
-                    size="small"
-                    disabled
-                  />
+                <td :class="{ 'env-exists': variable.dev !== null }" class="env-cell">
+                  <div v-if="variable.dev !== null" class="env-indicator">
+                    <icon-mdi:close text-xl />
+                  </div>
                 </td>
-                <td :class="{ 'env-exists': variable.staging !== null }">
-                  <n-input
-                    v-if="variable.staging !== null"
-                    v-model:value="variable.staging"
-                    placeholder="staging value"
-                    size="small"
-                    disabled
-                  />
+                <td :class="{ 'env-exists': variable.staging !== null }" class="env-cell">
+                  <div v-if="variable.staging !== null" class="env-indicator">
+                    <icon-mdi:close text-xl />
+                  </div>
                 </td>
-                <td :class="{ 'env-exists': variable.production !== null }">
-                  <n-input
-                    v-if="variable.production !== null"
-                    v-model:value="variable.production"
-                    placeholder="production value"
-                    size="small"
-                    disabled
-                  />
+                <td :class="{ 'env-exists': variable.production !== null }" class="env-cell">
+                  <div v-if="variable.production !== null" class="env-indicator">
+                    <icon-mdi:close text-xl />
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -540,13 +519,11 @@ onMounted(() => {
         </div>
 
         <div mt-3 text-xs op-60>
-          <div flex items-center gap-2 mb-1>
-            <div w-3 h-3 bg-yellow-100 border="1 yellow-400" />
-            <span>Rows with yellow background have different values across environments</span>
-          </div>
           <div flex items-center gap-2>
-            <div w-3 h-3 bg-red-100 border="1 red-400" />
-            <span>Red background means key exists in that environment</span>
+            <div w-5 h-5 bg-red-100 border="1 red-400" flex items-center justify-center>
+              <icon-mdi:close text-xs text-red-600 />
+            </div>
+            <span>Red background with <strong>✗</strong> icon means key exists in that environment</span>
           </div>
         </div>
       </c-card>
@@ -686,14 +663,6 @@ onMounted(() => {
     &:hover {
       background-color: rgba(128, 128, 128, 0.03);
     }
-
-    &.has-mismatch {
-      background-color: rgba(250, 173, 20, 0.1);
-      
-      &:hover {
-        background-color: rgba(250, 173, 20, 0.15);
-      }
-    }
   }
 
   ::v-deep(.n-input) {
@@ -701,11 +670,24 @@ onMounted(() => {
   }
 }
 
+.env-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
 .env-exists {
-  background-color: rgba(255, 0, 0, 0.08);
+  background-color: rgba(255, 0, 0, 0.1);
   
   &:hover {
-    background-color: rgba(255, 0, 0, 0.12);
+    background-color: rgba(255, 0, 0, 0.15);
   }
+}
+
+.env-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d32f2f;
+  font-weight: 600;
 }
 </style>

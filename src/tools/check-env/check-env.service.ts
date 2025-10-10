@@ -13,68 +13,88 @@ export async function fetchEnvData(): Promise<ApiResponse> {
 export function transformApiDataToUI(apiResponse: ApiResponse): TabData[] {
   const tabs: TabData[] = [];
 
-  // Process each tab (ai, backend, frontend)
+  // Process each tab (ai, backend, frontend, etc.)
   Object.entries(apiResponse.data).forEach(([tabKey, tabData]) => {
     const services: Service[] = [];
 
     // Process each service
-    Object.entries(tabData.services).forEach(([serviceName, serviceData]) => {
-      // Merge all modules into one service (since usually service name = module name)
-      const allVariables = new Map<string, EnvVariable>();
+    Object.entries(tabData.services || {}).forEach(([serviceName, serviceData]) => {
+      // Collect all unique keys from all environments in all modules
+      const allKeysSet = new Set<string>();
+      const keyToEnvValues: Record<string, { dev?: string; staging?: string; production?: string }> = {};
 
       // Process each module
-      Object.entries(serviceData.modules).forEach(([moduleName, moduleData]) => {
-        const { all_keys, Envs } = moduleData;
+      Object.entries(serviceData.modules || {}).forEach(([moduleName, moduleData]) => {
+        const { envs } = moduleData;
 
-        // Create variables from all_keys
-        Object.keys(all_keys).forEach((key) => {
-          if (!allVariables.has(key)) {
-            allVariables.set(key, {
-              key,
-              dev: null,
-              staging: null,
-              production: null,
-            });
-          }
+        if (!envs) return;
 
-          // Fill in environment values
-          const variable = allVariables.get(key);
-          if (variable) {
-            // Dev environment
-            if (Envs.dev?.Key[key] !== undefined) {
-              variable.dev = Envs.dev.Key[key] || '';
+        // Collect keys from dev environment
+        if (envs.dev?.key) {
+          Object.keys(envs.dev.key).forEach((key) => {
+            allKeysSet.add(key);
+            if (!keyToEnvValues[key]) {
+              keyToEnvValues[key] = {};
             }
-            // Staging environment
-            if (Envs.staging?.Key[key] !== undefined) {
-              variable.staging = Envs.staging.Key[key] || '';
+            keyToEnvValues[key].dev = envs.dev.key[key];
+          });
+        }
+
+        // Collect keys from staging environment
+        if (envs.staging?.key) {
+          Object.keys(envs.staging.key).forEach((key) => {
+            allKeysSet.add(key);
+            if (!keyToEnvValues[key]) {
+              keyToEnvValues[key] = {};
             }
-            // Production environment
-            if (Envs.production?.Key[key] !== undefined) {
-              variable.production = Envs.production.Key[key] || '';
+            keyToEnvValues[key].staging = envs.staging.key[key];
+          });
+        }
+
+        // Collect keys from production environment
+        if (envs.production?.key) {
+          Object.keys(envs.production.key).forEach((key) => {
+            allKeysSet.add(key);
+            if (!keyToEnvValues[key]) {
+              keyToEnvValues[key] = {};
             }
-          }
+            keyToEnvValues[key].production = envs.production.key[key];
+          });
+        }
+      });
+
+      // Convert to array of variables
+      const variables: EnvVariable[] = Array.from(allKeysSet).map((key) => {
+        const envValues = keyToEnvValues[key] || {};
+        return {
+          key,
+          dev: envValues.dev !== undefined ? envValues.dev : null,
+          staging: envValues.staging !== undefined ? envValues.staging : null,
+          production: envValues.production !== undefined ? envValues.production : null,
+        };
+      });
+
+      // Only add service if it has variables
+      if (variables.length > 0) {
+        services.push({
+          id: serviceName,
+          name: serviceName.split('-').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' '),
+          variables,
         });
-      });
-
-      // Convert map to array
-      const variables = Array.from(allVariables.values());
-
-      services.push({
-        id: serviceName,
-        name: serviceName.split('-').map(word => 
-          word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' '),
-        variables,
-      });
+      }
     });
 
-    tabs.push({
-      id: tabKey as 'ai' | 'backend' | 'frontend',
-      name: tabKey.charAt(0).toUpperCase() + tabKey.slice(1),
-      services,
-    });
+    // Only add tab if it has services
+    if (services.length > 0) {
+      tabs.push({
+        id: tabKey as 'ai' | 'backend' | 'frontend',
+        name: tabKey.charAt(0).toUpperCase() + tabKey.slice(1),
+        services,
+      });
+    }
   });
 
   return tabs;
 }
-

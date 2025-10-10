@@ -4,7 +4,7 @@ export interface ApiEnvValues {
 }
 
 export interface ApiEnvironment {
-  Key: ApiEnvValues;
+  key: ApiEnvValues;
 }
 
 export interface ApiEnvironments {
@@ -14,7 +14,7 @@ export interface ApiEnvironments {
 }
 
 export interface ApiModule {
-  Envs: ApiEnvironments;
+  envs: ApiEnvironments;
   all_keys: ApiEnvValues;
 }
 
@@ -36,16 +36,14 @@ export interface ApiTabData {
 
 export interface ApiResponse {
   data: {
-    ai: ApiTabData;
-    backend: ApiTabData;
-    frontend: ApiTabData;
+    [key: string]: ApiTabData;  // ai, backend, frontend, product-x, data, devops
   };
 }
 
 // UI Types
 export interface EnvVariable {
   key: string;
-  dev: string | null;  // null means environment not available
+  dev: string | null;  // null means key doesn't exist in this environment
   staging: string | null;
   production: string | null;
 }
@@ -63,4 +61,3 @@ export interface TabData {
   name: string;
   services: Service[];
 }
-

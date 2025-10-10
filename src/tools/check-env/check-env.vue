@@ -349,6 +349,11 @@ const checkMismatch = (variable: EnvVariable) => {
   const values = [variable.dev, variable.staging, variable.production].filter(Boolean);
   return new Set(values).size > 1;
 };
+
+// Auto-load data from API on mount
+onMounted(() => {
+  loadFromAPI();
+});
 </script>
 
 <template>
@@ -358,9 +363,6 @@ const checkMismatch = (variable: EnvVariable) => {
       <div flex items-center justify-between>
         <div>
           <h2 text-xl font-bold>{{ t('tools.check-env.title') }}</h2>
-          <p text-sm op-70 mt-1>
-            {{ t('tools.check-env.description') }}
-          </p>
         </div>
         <div flex gap-2>
           <c-button 
@@ -369,12 +371,6 @@ const checkMismatch = (variable: EnvVariable) => {
             @click="loadFromAPI"
           >
             Load from API
-          </c-button>
-          <c-button size="small" @click="loadSampleData">
-            {{ t('tools.check-env.loadSample') }}
-          </c-button>
-          <c-button size="small" @click="showAddServiceModal = true">
-            + Add Service
           </c-button>
         </div>
       </div>
@@ -491,7 +487,6 @@ const checkMismatch = (variable: EnvVariable) => {
                 <th style="width: 23%">Dev Env</th>
                 <th style="width: 23%">Staging Env</th>
                 <th style="width: 23%">Pro Env</th>
-                <th style="width: 60px">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -512,50 +507,32 @@ const checkMismatch = (variable: EnvVariable) => {
                     size="small"
                   />
                 </td>
-                <td>
-                  <div v-if="variable.dev === null" class="env-not-available">
-                    <icon-mdi:close-circle text-xl text-red-500 />
-                    <span text-xs op-60 ml-1>Not Available</span>
-                  </div>
+                <td :class="{ 'env-exists': variable.dev !== null }">
                   <n-input
-                    v-else
+                    v-if="variable.dev !== null"
                     v-model:value="variable.dev"
                     placeholder="dev value"
                     size="small"
+                    disabled
                   />
                 </td>
-                <td>
-                  <div v-if="variable.staging === null" class="env-not-available">
-                    <icon-mdi:close-circle text-xl text-red-500 />
-                    <span text-xs op-60 ml-1>Not Available</span>
-                  </div>
+                <td :class="{ 'env-exists': variable.staging !== null }">
                   <n-input
-                    v-else
+                    v-if="variable.staging !== null"
                     v-model:value="variable.staging"
                     placeholder="staging value"
                     size="small"
+                    disabled
                   />
                 </td>
-                <td>
-                  <div v-if="variable.production === null" class="env-not-available">
-                    <icon-mdi:close-circle text-xl text-red-500 />
-                    <span text-xs op-60 ml-1>Not Available</span>
-                  </div>
+                <td :class="{ 'env-exists': variable.production !== null }">
                   <n-input
-                    v-else
+                    v-if="variable.production !== null"
                     v-model:value="variable.production"
                     placeholder="production value"
                     size="small"
+                    disabled
                   />
-                </td>
-                <td text-center>
-                  <c-button
-                    variant="text"
-                    size="small"
-                    @click="removeVariable(index)"
-                  >
-                    <icon-mdi:delete text-lg text-red-500 />
-                  </c-button>
                 </td>
               </tr>
             </tbody>
@@ -568,8 +545,8 @@ const checkMismatch = (variable: EnvVariable) => {
             <span>Rows with yellow background have different values across environments</span>
           </div>
           <div flex items-center gap-2>
-            <icon-mdi:close-circle text-red-500 />
-            <span>Red icon means environment data is not available from API</span>
+            <div w-3 h-3 bg-red-100 border="1 red-400" />
+            <span>Red background means key exists in that environment</span>
           </div>
         </div>
       </c-card>
@@ -724,12 +701,11 @@ const checkMismatch = (variable: EnvVariable) => {
   }
 }
 
-.env-not-available {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  background-color: rgba(255, 0, 0, 0.05);
-  border-radius: 4px;
+.env-exists {
+  background-color: rgba(255, 0, 0, 0.08);
+  
+  &:hover {
+    background-color: rgba(255, 0, 0, 0.12);
+  }
 }
 </style>

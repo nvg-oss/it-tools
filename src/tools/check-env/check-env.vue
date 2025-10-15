@@ -200,6 +200,8 @@ const loadSampleData = () => {
             { key: 'SMTP_PORT', dev: '2525', staging: '587', production: '587' },
             { key: 'SMTP_USER', dev: 'test_user', staging: 'staging_user', production: 'prod_user' },
             { key: 'FROM_EMAIL', dev: 'dev@test.com', staging: 'staging@company.com', production: 'noreply@company.com' },
+            { key: 'SMTP_PASSWORD', dev: 'dev_password', staging: null, production: 'prod_password' },
+            { key: 'EMAIL_TEMPLATE_PATH', dev: null, staging: '/templates', production: '/templates' },
           ],
         },
         {
@@ -234,6 +236,8 @@ const loadSampleData = () => {
             { key: 'DB_PORT', dev: '5432', staging: '5432', production: '5432' },
             { key: 'DB_NAME', dev: 'myapp_dev', staging: 'myapp_staging', production: 'myapp_production' },
             { key: 'DB_USER', dev: 'dev_user', staging: 'staging_user', production: 'prod_user' },
+            { key: 'DB_PASSWORD', dev: 'dev_pass', staging: null, production: 'prod_pass' },
+            { key: 'DB_SSL_MODE', dev: null, staging: 'require', production: 'require' },
           ],
         },
         {
@@ -322,6 +326,40 @@ const { copy: copyProduction } = useCopy({
   source: computed(() => exportToEnv('production')),
   text: 'Production environment copied!' 
 });
+
+// Filter state
+const showOnlyMissing = ref(false);
+
+// Filtered variables (show only variables with red background and X icon when filter is active)
+const filteredVariables = computed(() => {
+  if (!activeService.value) return [];
+  
+  if (!showOnlyMissing.value) {
+    return activeService.value.variables;
+  }
+  
+  // Show only variables that have values (red background with X icon) in any environment
+  return activeService.value.variables.filter(v => {
+    if (!v.key) return false;
+    
+    // Check if any environment has a value (not null means has value - shows red background with X)
+    return v.dev !== null || v.staging !== null || v.production !== null;
+  });
+});
+
+// Get service status color based on variables with values (red background + X icon)
+const getServiceStatusColor = (service: Service) => {
+  if (service.variables.length === 0) {
+    return 'bg-gray-400'; // No variables
+  }
+  
+  // Check if any variable has values (not null - shows red background with X icon)
+  const hasValues = service.variables.some(v => 
+    v.dev !== null || v.staging !== null || v.production !== null
+  );
+  
+  return hasValues ? 'bg-red-500' : 'bg-green-500';
+};
 
 // Statistics
 const stats = computed(() => {
@@ -423,7 +461,7 @@ onMounted(() => {
                   w-2
                   h-2
                   rounded-full
-                  :class="service.variables.length > 0 ? 'bg-green-500' : 'bg-gray-400'"
+                  :class="getServiceStatusColor(service)"
                 />
                 <span>{{ service.name }}</span>
               </div>
@@ -449,8 +487,13 @@ onMounted(() => {
             {{ activeService?.name }}
           </h3>
           <div flex gap-2>
-            <c-button size="small" @click="addVariable">
-              + Add Variable
+            <c-button 
+              size="small"
+              :type="showOnlyMissing ? 'primary' : 'default'"
+              @click="showOnlyMissing = !showOnlyMissing"
+            >
+              <icon-mdi:filter-variant mr-1 />
+              {{ showOnlyMissing ? 'Show All' : 'Filter With Values' }}
             </c-button>
             <n-dropdown
               trigger="hover"
@@ -484,13 +527,13 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-if="activeService?.variables.length === 0">
+              <tr v-if="filteredVariables.length === 0">
                 <td colspan="4" text-center op-50 py-8>
-                  No variables found in this service.
+                  {{ showOnlyMissing ? 'No variables with values found.' : 'No variables found in this service.' }}
                 </td>
               </tr>
               <tr
-                v-for="(variable, index) in activeService?.variables"
+                v-for="(variable, index) in filteredVariables"
                 :key="index"
               >
                 <td>

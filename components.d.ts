@@ -94,6 +94,7 @@ declare module '@vue/runtime-core' {
     'IconMdi:close': typeof import('~icons/mdi/close')['default']
     'IconMdi:closeCircle': typeof import('~icons/mdi/close-circle')['default']
     'IconMdi:delete': typeof import('~icons/mdi/delete')['default']
+    'IconMdi:filterVariant': typeof import('~icons/mdi/filter-variant')['default']
     'IconMdi:kettleSteamOutline': typeof import('~icons/mdi/kettle-steam-outline')['default']
     IconMdiChevronDown: typeof import('~icons/mdi/chevron-down')['default']
     IconMdiChevronRight: typeof import('~icons/mdi/chevron-right')['default']

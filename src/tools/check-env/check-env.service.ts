@@ -1,6 +1,7 @@
 import type { ApiResponse, TabData, Service, EnvVariable } from './check-env.types';
+import configOps from '../../../config-ops.json';
 
-const API_ENDPOINT = 'http://172.22.2.251:8082/check-env.json';
+const API_ENDPOINT = configOps.default_endpoint;
 
 export async function fetchEnvData(): Promise<ApiResponse> {
   const response = await fetch(API_ENDPOINT);

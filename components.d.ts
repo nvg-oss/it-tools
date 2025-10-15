@@ -91,6 +91,7 @@ declare module '@vue/runtime-core' {
     HttpStatusCodes: typeof import('./src/tools/http-status-codes/http-status-codes.vue')['default']
     IbanValidatorAndParser: typeof import('./src/tools/iban-validator-and-parser/iban-validator-and-parser.vue')['default']
     'IconMdi:brushVariant': typeof import('~icons/mdi/brush-variant')['default']
+    'IconMdi:check': typeof import('~icons/mdi/check')['default']
     'IconMdi:close': typeof import('~icons/mdi/close')['default']
     'IconMdi:closeCircle': typeof import('~icons/mdi/close-circle')['default']
     'IconMdi:delete': typeof import('~icons/mdi/delete')['default']

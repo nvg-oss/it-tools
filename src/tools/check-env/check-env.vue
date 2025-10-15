@@ -432,7 +432,7 @@ onMounted(() => {
               {{ tab.name }}
             </div>
             <div text-xs op-60 mt-1>
-              {{ tab.services.reduce((sum, s) => sum + s.variables.length, 0) }} variables
+              {{ tab.services.reduce((sum, s) => sum + s.variables.length, 0) }} variables{{ tab.services.reduce((sum, s) => sum + s.variables.filter(v => v.dev !== null || v.staging !== null || v.production !== null).length, 0) > 0 ? ' - ' + tab.services.reduce((sum, s) => sum + s.variables.filter(v => v.dev !== null || v.staging !== null || v.production !== null).length, 0) + ' variables missed' : '' }}
             </div>
           </div>
         </div>
@@ -442,7 +442,7 @@ onMounted(() => {
     <!-- Main layout: 2 columns -->
     <div flex gap-3>
       <!-- Left Column: Services List (30%) -->
-      <c-card style="width: 30%; min-height: 500px;" pa-0>
+      <c-card style="width: 30%; height: 100vh; overflow-y: auto;" pa-0>
         <div pa-4 border-b>
           <h3 font-semibold>Services - {{ activeTabData?.name }}</h3>
         </div>
@@ -474,7 +474,7 @@ onMounted(() => {
               </div>
             </div>
             <div text-xs op-60 mt-1 ml-4>
-              {{ service.variables.length }} variables
+              {{ service.variables.length }} variables{{ service.variables.filter(v => v.dev !== null || v.staging !== null || v.production !== null).length > 0 ? ' - ' + service.variables.filter(v => v.dev !== null || v.staging !== null || v.production !== null).length + ' variables missed' : '' }}
             </div>
           </div>
         </div>
@@ -541,19 +541,28 @@ onMounted(() => {
                     {{ variable.key }}
                   </span>
                 </td>
-                <td :class="{ 'env-exists': variable.dev !== null }" class="env-cell">
-                  <div v-if="variable.dev !== null" class="env-indicator">
+                <td :class="{ 'env-exists': variable.dev !== null, 'env-missing': variable.dev === null }" class="env-cell">
+                  <div v-if="variable.dev !== null" class="env-indicator env-error">
                     <icon-mdi:close text-xl />
                   </div>
-                </td>
-                <td :class="{ 'env-exists': variable.staging !== null }" class="env-cell">
-                  <div v-if="variable.staging !== null" class="env-indicator">
-                    <icon-mdi:close text-xl />
+                  <div v-else class="env-indicator env-success">
+                    <icon-mdi:check text-xl />
                   </div>
                 </td>
-                <td :class="{ 'env-exists': variable.production !== null }" class="env-cell">
-                  <div v-if="variable.production !== null" class="env-indicator">
+                <td :class="{ 'env-exists': variable.staging !== null, 'env-missing': variable.staging === null }" class="env-cell">
+                  <div v-if="variable.staging !== null" class="env-indicator env-error">
                     <icon-mdi:close text-xl />
+                  </div>
+                  <div v-else class="env-indicator env-success">
+                    <icon-mdi:check text-xl />
+                  </div>
+                </td>
+                <td :class="{ 'env-exists': variable.production !== null, 'env-missing': variable.production === null }" class="env-cell">
+                  <div v-if="variable.production !== null" class="env-indicator env-error">
+                    <icon-mdi:close text-xl />
+                  </div>
+                  <div v-else class="env-indicator env-success">
+                    <icon-mdi:check text-xl />
                   </div>
                 </td>
               </tr>
@@ -562,11 +571,19 @@ onMounted(() => {
         </div>
 
         <div mt-3 text-xs op-60>
-          <div flex items-center gap-2>
-            <div w-5 h-5 bg-red-100 border="1 red-400" flex items-center justify-center>
-              <icon-mdi:close text-xs text-red-600 />
+          <div flex items-center gap-4>
+            <div flex items-center gap-2>
+              <div w-5 h-5 bg-red-100 border="1 red-400" flex items-center justify-center>
+                <icon-mdi:close text-xs text-red-600 />
+              </div>
+              <span>Red background with <strong>✗</strong> icon means key has value</span>
             </div>
-            <span>Red background with <strong>✗</strong> icon means key exists in that environment</span>
+            <div flex items-center gap-2>
+              <div w-5 h-5 bg-green-100 border="1 green-400" flex items-center justify-center>
+                <icon-mdi:check text-xs text-green-600 />
+              </div>
+              <span>Green background with <strong>✓</strong> icon means key is missing</span>
+            </div>
           </div>
         </div>
       </c-card>
@@ -726,11 +743,26 @@ onMounted(() => {
   }
 }
 
+.env-missing {
+  background-color: rgba(76, 175, 80, 0.1);
+  
+  &:hover {
+    background-color: rgba(76, 175, 80, 0.15);
+  }
+}
+
 .env-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d32f2f;
   font-weight: 600;
+}
+
+.env-success {
+  color: #4caf50;
+}
+
+.env-error {
+  color: #d32f2f;
 }
 </style>
